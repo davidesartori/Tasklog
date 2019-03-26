@@ -37,12 +37,19 @@ if __name__ == "__main__":
     db_table = "Tasklog"
     rows = ["process", "timestamp", "event", "level"]
     id_in_table = True
+
     firebase_admin_certificate = "admin-sdk.json"
+
+    verbose_logging = False
 
     processes = {}
 
-    connection = mysql.connector.connect(user=db_username, password=db_password, host=db_host,
-                                         database=database)
+    try:
+        connection = mysql.connector.connect(user=db_username, password=db_password, host=db_host,
+                                             database=database)
+    except mysql.connector.errors.InterfaceError:
+        exit(1)
+
     database_cursor = connection.cursor(buffered=True)
 
     result_set = database_query(database_cursor, "select * from " + db_table + " order by timestamp desc")
@@ -60,7 +67,12 @@ if __name__ == "__main__":
 
     # firebase
 
-    firebase_connection(firebase_admin_certificate)
+    try:
+        firebase_connection(firebase_admin_certificate)
+    except IOError:
+        exit(1)
+    except Exception:
+        exit(1)
 
     db_ref = "/"
     structure = processes
