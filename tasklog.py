@@ -13,8 +13,8 @@ def database_query(cursor, query):
     return records
 
 
-def firebase_connection():
-    cred = credentials.Certificate('admin-sdk.json')
+def firebase_connection(certificate):
+    cred = credentials.Certificate(certificate)
 
     firebase_admin.initialize_app(cred, {
         'databaseURL': 'https://processi-marconi.firebaseio.com/'
@@ -30,13 +30,14 @@ def firebase_update(ref_name, db_structure):
 
 
 if __name__ == "__main__":
-    db_username = ""
-    db_password = ""
+    db_username = "testuser"
+    db_password = "password"
     db_host = "localhost"
-    database = ""
-    db_table = ""
+    database = "processi_marconi"
+    db_table = "Tasklog"
     rows = ["process", "timestamp", "event", "level"]
     id_in_table = True
+    firebase_admin_certificate = "admin-sdk.json"
 
     processes = {}
 
@@ -59,7 +60,7 @@ if __name__ == "__main__":
 
     # firebase
 
-    firebase_connection()
+    firebase_connection(firebase_admin_certificate)
 
     db_ref = "/"
     structure = processes
