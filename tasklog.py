@@ -74,8 +74,8 @@ if __name__ == "__main__":
     processes = {}
 
     try:
-        connection = mysql.connector.connect(user=conf["db_username"], password=conf["db_password"], host=conf["db_host"],
-                                             database=conf["database"])
+        connection = mysql.connector.connect(user=conf["db_username"], password=conf["db_password"],
+                                             host=conf["db_host"], database=conf["database"])
     except mysql.connector.errors.InterfaceError:
         if verbose_logging:
             print("Impossibile connettersi al database")
