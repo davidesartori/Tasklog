@@ -2,6 +2,7 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
 import mysql.connector
+import sys
 
 import datetime
 
@@ -41,6 +42,18 @@ if __name__ == "__main__":
     firebase_admin_certificate = "admin-sdk.json"
 
     verbose_logging = False
+    conf = "tasklog.conf"
+
+    for arg in sys.argv:
+        if arg == "-v":
+            verbose_logging = True
+        elif arg == "-conf":
+            try:
+                conf = sys.argv[sys.argv.index(arg) + 1]
+            except IndexError:
+                if verbose_logging:
+                    print("File di configurazione non valido")
+                exit(1)
 
     processes = {}
 
@@ -60,7 +73,7 @@ if __name__ == "__main__":
     except mysql.connector.errors.ProgrammingError:
         if verbose_logging:
             print("Errore di sintassi nella query al database")
-            
+
         exit(1)
 
     for result in result_set:
