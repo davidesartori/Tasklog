@@ -7,6 +7,23 @@ import sys
 import datetime
 
 
+def get_conf(filename, parameters, lists):
+    conf_dict = {}
+
+    for line in open(filename):
+        if line.split("=")[0].strip() in parameters:
+            conf_dict[line.split("=")[0].strip()] = line.split("=")[1].strip()
+        elif line.split("=")[0].strip() in lists:
+            parameter_list = []
+
+            for item in line.split("=")[1].strip().split(","):
+                parameter_list.append(item.strip())
+
+            conf_dict[line.split("=")[0].strip()] = parameter_list
+
+    return conf_dict
+
+
 def database_query(cursor, query):
     cursor.execute(query)
     records = cursor.fetchall()
@@ -31,35 +48,34 @@ def firebase_update(ref_name, db_structure):
 
 
 if __name__ == "__main__":
-    db_username = "testuser"
-    db_password = "password"
-    db_host = "localhost"
-    database = "processi_marconi"
-    db_table = "Tasklog"
-    rows = ["process", "timestamp", "event", "level"]
     id_in_table = True
 
-    firebase_admin_certificate = "admin-sdk.json"
-
     verbose_logging = False
-    conf = "tasklog.conf"
+    conf_path = "../conf/tasklog.conf"
+    conf_parameters = ["db_username", "db_password", "db_host", "database", "db_table", "firebase_admin_certificate"]
+    conf_lists = ["rows"]
+
+    if verbose_logging:
+        print("Start")
 
     for arg in sys.argv:
         if arg == "-v":
             verbose_logging = True
         elif arg == "-conf":
             try:
-                conf = sys.argv[sys.argv.index(arg) + 1]
+                conf_file = sys.argv[sys.argv.index(arg) + 1]
             except IndexError:
                 if verbose_logging:
                     print("File di configurazione non valido")
                 exit(1)
 
+    conf = get_conf(conf_path, conf_parameters, conf_lists)
+
     processes = {}
 
     try:
-        connection = mysql.connector.connect(user=db_username, password=db_password, host=db_host,
-                                             database=database)
+        connection = mysql.connector.connect(user=conf["db_username"], password=conf["db_password"], host=conf["db_host"],
+                                             database=conf["database"])
     except mysql.connector.errors.InterfaceError:
         if verbose_logging:
             print("Impossibile connettersi al database")
@@ -69,7 +85,7 @@ if __name__ == "__main__":
     database_cursor = connection.cursor(buffered=True)
 
     try:
-        result_set = database_query(database_cursor, "select * from " + db_table + " order by timestamp desc")
+        result_set = database_query(database_cursor, "select * from " + conf["db_table"] + " order by timestamp desc")
     except mysql.connector.errors.ProgrammingError:
         if verbose_logging:
             print("Errore di sintassi nella query al database")
@@ -78,11 +94,11 @@ if __name__ == "__main__":
 
     for result in result_set:
         process = {}
-        for i in range(2, len(rows) + 1):
+        for i in range(2, len(conf["rows"]) + 1):
             if type(result[i]) is datetime.datetime:
-                process[rows[i - 1]] = str(result[i])
+                process[conf["rows"][i - 1]] = str(result[i])
             else:
-                process[rows[i - 1]] = result[i]
+                process[conf["rows"][i - 1]] = result[i]
 
         if result[1] not in processes.keys():
             processes[result[1]] = process
@@ -90,7 +106,7 @@ if __name__ == "__main__":
     # firebase
 
     try:
-        firebase_connection(firebase_admin_certificate)
+        firebase_connection(conf["firebase_admin_certificate"])
     except IOError:
         exit(1)
     except Exception:
@@ -100,3 +116,6 @@ if __name__ == "__main__":
     structure = processes
 
     firebase_update(db_ref, structure)
+
+    if verbose_logging:
+        print("Stop")
