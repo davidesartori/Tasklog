@@ -48,11 +48,20 @@ if __name__ == "__main__":
         connection = mysql.connector.connect(user=db_username, password=db_password, host=db_host,
                                              database=database)
     except mysql.connector.errors.InterfaceError:
+        if verbose_logging:
+            print("Impossibile connettersi al database")
+
         exit(1)
 
     database_cursor = connection.cursor(buffered=True)
 
-    result_set = database_query(database_cursor, "select * from " + db_table + " order by timestamp desc")
+    try:
+        result_set = database_query(database_cursor, "select * from " + db_table + " order by timestamp desc")
+    except mysql.connector.errors.ProgrammingError:
+        if verbose_logging:
+            print("Errore di sintassi nella query al database")
+            
+        exit(1)
 
     for result in result_set:
         process = {}
