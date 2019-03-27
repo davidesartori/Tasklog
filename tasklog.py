@@ -147,11 +147,18 @@ if __name__ == "__main__":
 
     for result in result_set:
         process = {}
-        for i in range(2, len(conf["rows"]) + 1):
-            if type(result[i]) is datetime.datetime:
-                process[conf["rows"][i - 1]] = str(result[i])
-            else:
-                process[conf["rows"][i - 1]] = result[i]
+        if id_in_table:
+            for i in range(2, len(conf["rows"]) + 1):
+                if type(result[i]) is datetime.datetime:
+                    process[conf["rows"][i - 1]] = str(result[i])
+                else:
+                    process[conf["rows"][i - 1]] = result[i]
+        else:
+            for i in range(1, len(conf["rows"]) + 1):
+                if type(result[i]) is datetime.datetime:
+                    process[conf["rows"][i - 1]] = str(result[i])
+                else:
+                    process[conf["rows"][i - 1]] = result[i]
 
         if result[1] not in processes.keys():
             processes[result[1]] = process
