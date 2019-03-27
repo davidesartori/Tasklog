@@ -8,6 +8,7 @@ import datetime
 
 
 def get_conf(filename, parameters, lists):
+    """ returns the configuration from the given file """
     conf_dict = {}
 
     for line in open(filename):
@@ -25,6 +26,7 @@ def get_conf(filename, parameters, lists):
 
 
 def database_query(cursor, query):
+    """ executes the given query on the database """
     cursor.execute(query)
     records = cursor.fetchall()
 
@@ -32,6 +34,7 @@ def database_query(cursor, query):
 
 
 def firebase_connection(certificate):
+    """ creates a connection with firebase """
     cred = credentials.Certificate(certificate)
 
     firebase_admin.initialize_app(cred, {
@@ -40,6 +43,7 @@ def firebase_connection(certificate):
 
 
 def firebase_update(ref_name, db_structure):
+    """ updates the firebase database with the given structure """
     ref = db.reference(ref_name)
 
     ref.update(
