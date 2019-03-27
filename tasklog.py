@@ -10,6 +10,9 @@ import sys
 import datetime
 import time
 
+__author__ = "Sartori Davide"
+__version__ = "1.0"
+
 
 def get_conf(filename, parameters, lists):
     """ returns the configuration from the given file """
