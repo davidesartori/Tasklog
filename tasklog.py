@@ -1,3 +1,6 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import db
@@ -5,6 +8,7 @@ import mysql.connector
 import sys
 
 import datetime
+import time
 
 
 def get_conf(filename, parameters, lists):
@@ -51,13 +55,23 @@ def firebase_update(ref_name, db_structure):
     )
 
 
+def format_log_text(text):
+    """ returns the formatted log text """
+    timestamp = datetime.date.today().strftime('%Y-%m-%d') + " " + time.strftime('%H:%M:%S')
+
+    return timestamp + "§" + text + "\n"
+
+
 if __name__ == "__main__":
     id_in_table = True
 
     verbose_logging = False
-    conf_path = "../conf/tasklog.conf"
-    conf_parameters = ["db_username", "db_password", "db_host", "database", "db_table", "firebase_admin_certificate"]
+    conf_path = "tasklog.conf"
+    log_path = "../log/tracelog.log"
+    conf_parameters = ["db_username", "db_password", "db_host", "database", "db_table", "firebase_admin_certificate",
+                       "log"]
     conf_lists = ["rows"]
+    log_text = ""
 
     if verbose_logging:
         print("Start")
@@ -71,11 +85,23 @@ if __name__ == "__main__":
             except IndexError:
                 if verbose_logging:
                     print("File di configurazione non valido")
+
                 exit(1)
 
     conf = get_conf(conf_path, conf_parameters, conf_lists)
 
+    if conf["log"]:
+        try:
+            log_file = open(conf["log"], "a")
+        except IOError:
+            log_file = open(conf["log"], "w")
+
     processes = {}
+
+    if verbose_logging:
+        print("Connessione al database")
+
+    log_text += format_log_text("Connessione al database")
 
     try:
         connection = mysql.connector.connect(user=conf["db_username"], password=conf["db_password"],
@@ -84,9 +110,18 @@ if __name__ == "__main__":
         if verbose_logging:
             print("Impossibile connettersi al database")
 
+        log_text += format_log_text("Impossibile connettersi al database")
+
+        log_file.write(log_text)
+
         exit(1)
 
     database_cursor = connection.cursor(buffered=True)
+
+    if verbose_logging:
+        print("Esecuzione query")
+
+    log_text += format_log_text("Esecuzione query")
 
     try:
         result_set = database_query(database_cursor, "select * from " + conf["db_table"] + " order by timestamp desc")
@@ -94,7 +129,18 @@ if __name__ == "__main__":
         if verbose_logging:
             print("Errore di sintassi nella query al database")
 
+        log_text += format_log_text("Errore di sintassi nella query")
+
+        log_file.write(log_text)
+
         exit(1)
+
+    if verbose_logging:
+        print("Chiusura connessione al database")
+
+    log_text += format_log_text("Chiusura connessione al database")
+
+    database_cursor.close()
 
     for result in result_set:
         process = {}
@@ -109,17 +155,44 @@ if __name__ == "__main__":
 
     # firebase
 
+    if verbose_logging:
+        print("Connessione a firebase")
+
+    log_text += format_log_text("Connessione a firebase")
+
     try:
         firebase_connection(conf["firebase_admin_certificate"])
     except IOError:
+        if verbose_logging:
+            print("Certificato admin non trovato")
+
+        log_text += format_log_text("Certificato admin non trovato")
+
+        log_file.write(log_text)
+
         exit(1)
     except Exception:
+        if verbose_logging:
+            print("Certificato admin non valido")
+
+        log_text += format_log_text("Certificato admin non valido")
+
+        log_file.write(log_text)
+
         exit(1)
 
     db_ref = "/"
     structure = processes
 
+    if verbose_logging:
+        print("Aggiornamento firebase")
+    log_text += format_log_text("Aggiornamento firebase")
+
     firebase_update(db_ref, structure)
 
     if verbose_logging:
         print("Stop")
+
+    log_text += format_log_text("0")
+
+    log_file.write(log_text)
