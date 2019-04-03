@@ -14,7 +14,7 @@ __author__ = "Sartori Davide"
 __version__ = "1.0"
 
 
-def get_conf(filename, parameters, lists):
+def get_conf(filename, parameters, lists, bools):
     """ returns the configuration from the given file """
     conf_dict = {}
 
@@ -28,6 +28,12 @@ def get_conf(filename, parameters, lists):
                 parameter_list.append(item.strip())
 
             conf_dict[line.split("=")[0].strip()] = parameter_list
+
+        elif line.split("=")[0].strip() in bools:
+            if line.split("=")[1].strip().lower() == "true":
+                conf_dict[line.split("=")[0].strip()] = True
+            elif line.split("=")[1].strip().lower() == "false":
+                conf_dict[line.split("=")[0].strip()] = False
 
     return conf_dict
 
@@ -66,14 +72,12 @@ def format_log_text(text):
 
 
 if __name__ == "__main__":
-    id_in_table = True
-
     verbose_logging = False
     conf_path = "tasklog.conf"
-    log_path = "../log/tracelog.log"
     conf_parameters = ["db_username", "db_password", "db_host", "database", "db_table", "firebase_admin_certificate",
                        "log"]
     conf_lists = ["rows"]
+    conf_bools = ["id_in_table"]
     log_text = ""
 
     if verbose_logging:
@@ -91,13 +95,22 @@ if __name__ == "__main__":
 
                 exit(1)
 
-    conf = get_conf(conf_path, conf_parameters, conf_lists)
+    conf = get_conf(conf_path, conf_parameters, conf_lists, conf_bools)
 
-    if conf["log"]:
-        try:
-            log_file = open(conf["log"], "a")
-        except IOError:
-            log_file = open(conf["log"], "w")
+    try:
+        log_path = conf["log"]
+    except KeyError:
+        log_path = "../log/tracelog.log"
+
+    try:
+        log_file = open(log_path, "a")
+    except IOError:
+        log_file = open(log_path, "w")
+
+    try:
+        id_in_table = conf["id_in_table"]
+    except KeyError:
+        id_in_table = True
 
     processes = {}
 
