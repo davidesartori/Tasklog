@@ -79,6 +79,7 @@ if __name__ == "__main__":
     conf_lists = ["rows"]
     conf_bools = ["id_in_table"]
     log_text = ""
+    process_name_index = 2
 
     if verbose_logging:
         print("Start")
@@ -173,8 +174,8 @@ if __name__ == "__main__":
                 else:
                     process[conf["rows"][i - 1]] = result[i]
 
-        if result[1] not in processes.keys():
-            processes[result[1]] = process
+        if result[process_name_index] not in processes.keys():
+            processes[result[process_name_index]] = process
 
     # firebase
 
