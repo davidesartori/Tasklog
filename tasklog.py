@@ -46,12 +46,12 @@ def database_query(cursor, query):
     return records
 
 
-def firebase_connection(certificate):
+def firebase_connection(certificate, firebase_url):
     """ creates a connection with firebase """
     cred = credentials.Certificate(certificate)
 
     firebase_admin.initialize_app(cred, {
-        'databaseURL': 'https://processi-marconi.firebaseio.com/'
+        'databaseURL': firebase_url
     })
 
 
@@ -75,7 +75,7 @@ if __name__ == "__main__":
     verbose_logging = False
     conf_path = "tasklog.conf"
     conf_parameters = ["db_username", "db_password", "db_host", "database", "db_table", "firebase_admin_certificate",
-                       "log"]
+                       "log", "firebaseurl"]
     conf_lists = ["rows"]
     conf_bools = ["id_in_table"]
     log_text = ""
@@ -187,7 +187,7 @@ if __name__ == "__main__":
     log_text += format_log_text("Connessione a firebase")
 
     try:
-        firebase_connection(conf["firebase_admin_certificate"])
+        firebase_connection(conf["firebase_admin_certificate"], conf["firebaseurl"])
     except IOError:
         if verbose_logging:
             print("Certificato admin non trovato")
